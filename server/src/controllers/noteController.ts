@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
-import { Note } from '../models/Note';
-import { IUser } from '../models/User';
-import { authenticateToken } from '../middleware/auth';
-
+import { Note } from '../models/note.model';
+import { IUser } from '../models/user.model';
+import {authenticateToken} from '../middlewares/auth'
 export const createNote = async (req: Request, res: Response) => {
   try {
     const { title, content } = req.body;

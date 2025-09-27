@@ -1,3 +1,5 @@
+import dotenv from 'dotenv';
+dotenv.config();
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
@@ -6,13 +8,11 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import dotenv from 'dotenv';
 import session from 'express-session';
 
 import apiRoutes from './routes/api';
 import { User } from './models/user.model';
 
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
