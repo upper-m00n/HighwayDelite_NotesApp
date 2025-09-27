@@ -2,8 +2,8 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
-import { IUser, User } from '../models/User'; // <-- Import User model
-import { authenticateToken } from '../middleware/auth';
+import { IUser, User } from '../models/user.model'; 
+import { authenticateToken } from '../middlewares/auth';
 
 const generateOTP = (): string => {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -54,20 +54,17 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
-    // Check if user already exists
+    
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ error: 'User already exists' });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Generate OTP
     const otp = generateOTP();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Create user
     const user = new User({
       email,
       password: hashedPassword,
@@ -78,7 +75,6 @@ export const register = async (req: Request, res: Response) => {
 
     await user.save();
 
-    // Send OTP email
     try {
       await sendOTPEmail(email, otp);
     } catch (emailError) {
@@ -121,13 +117,12 @@ export const verifyOTP = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'OTP expired' });
     }
 
-    // Verify user
+ 
     user.isVerified = true;
     user.otp = undefined;
     user.otpExpires = undefined;
     await user.save();
 
-    // Generate JWT token
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET!,
