@@ -3,7 +3,7 @@ import {
     requestOtpHandler, 
     verifyOtpAndCreateUserHandler,
     googleOauthHandler 
-} from '../controllers/auth.controller';
+} from '../controllers/authController';
 
 const router = Router();
 
