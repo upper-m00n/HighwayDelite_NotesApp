@@ -1,10 +1,11 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
-import dotenv from 'dotenv';
+
 import cors from 'cors';
 
+import authRoute from './routes/auth.routes'
 
-dotenv.config();
+
 
 const app: Express = express();
 const port = process.env.PORT || 5001;
@@ -35,6 +36,8 @@ mongoose.connect(mongoUri)
 app.get('/', (req: Request, res: Response) => {
   res.status(200).json({ message: 'Note-Taking API is running smoothly!' });
 });
+
+app.use('/api/auth',authRoute)
 
 
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
