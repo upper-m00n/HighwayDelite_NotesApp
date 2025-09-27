@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useAuth, AuthProvider } from './context/AuthContext';
-import AuthPage from './pages/AuthPage';
+import AuthPage from './pages/AuthCallback';
 import DashboardPage from './pages/DashboardPage';
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
