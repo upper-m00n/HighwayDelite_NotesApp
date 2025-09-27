@@ -1,35 +1,54 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { GoogleOAuthProvider } from '@react-oauth/google';
+import { useAuth, AuthProvider } from './context/AuthContext';
+import AuthPage from './pages/AuthPage';
+import DashboardPage from './pages/DashboardPage';
 
-function App() {
-  const [count, setCount] = useState(0)
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string;
+
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { token, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-xl font-semibold">Loading...</div>
+      </div>
+    );
+  }
+
+  return token ? <>{children}</> : <Navigate to="/auth" />;
+};
+
+function AppContent() {
+  const { token } = useAuth();
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <Router>
+        <Routes>
+          <Route path="/auth" element={!token ? <AuthPage /> : <Navigate to="/" />} />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Router>
+    </GoogleOAuthProvider>
+  );
 }
 
-export default App
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
+
+export default App;
