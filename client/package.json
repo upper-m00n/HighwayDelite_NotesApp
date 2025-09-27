@@ -12,6 +12,7 @@
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
     "@types/react-router-dom": "^5.3.3",
+    "@vitejs/plugin-react": "^5.0.4",
     "axios": "^1.12.2",
     "lucide-react": "^0.544.0",
     "react-hook-form": "^7.63.0",
@@ -19,7 +20,7 @@
     "yup": "^1.7.1"
   },
   "devDependencies": {
-     "@types/morgan": "^1.9.10",
+    "@types/morgan": "^1.9.10",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
