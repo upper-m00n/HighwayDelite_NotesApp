@@ -10,7 +10,8 @@ const generateOTP = (): string => {
 };
 
 const sendOTPEmail = async (email: string, otp: string): Promise<void> => {
-  const transporter = nodemailer.createTransport({
+  try {
+    const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER,
@@ -34,6 +35,9 @@ const sendOTPEmail = async (email: string, otp: string): Promise<void> => {
   };
 
   await transporter.sendMail(mailOptions);
+  } catch (error) {
+    console.log("error while sending otp",error)
+  }
 };
 
 export const register = async (req: Request, res: Response) => {
@@ -148,26 +152,35 @@ export const verifyOTP = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-
+    console.log("email and password:",email,password);
+    
     if (!email || !password) {
+      console.log("Email pass required.")
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
     const user = await User.findOne({ email });
     if (!user) {
+      console.log("cannot find user.")
       return res.status(400).json({ error: 'Invalid credentials' });
+      
     }
 
     if (!user.password) {
+      console.log("password")
       return res.status(400).json({ error: 'Please use Google login' });
+      
     }
 
     if (!user.isVerified) {
+      console.log("Please verify email.")
       return res.status(400).json({ error: 'Please verify your email first' });
+      
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
+      console.log("Please enter valid password.")
       return res.status(400).json({ error: 'Invalid credentials' });
     }
 
