@@ -1,30 +1,51 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import nodemailer from 'nodemailer';
+import { fetch } from 'undici';
 import { IUser, User } from '../models/user.model';
 
 const generateOTP = (): string => Math.floor(100000 + Math.random() * 900000).toString();
 
 const sendOTPEmail = async (email: string, otp: string): Promise<void> => {
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-  });
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: email,
-    subject: 'OTP Verification',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #333;">OTP Verification</h2>
-        <p>Your OTP is:</p>
-        <h1 style="color: #007bff; font-size: 32px; text-align: center; margin: 20px 0;">${otp}</h1>
-        <p>This OTP will expire in 10 minutes.</p>
-      </div>
-    `
+  const apiKey = process.env.ELASTIC_API_KEY;
+  const from = process.env.EMAIL_FROM;
+  if (!apiKey) throw new Error('ELASTIC_API_KEY is not set');
+  if (!from) throw new Error('EMAIL_FROM is not set');
+
+  const body = {
+    Recipients: [{ Email: email }],
+    Content: {
+      From: from,
+      Subject: 'OTP Verification',
+      Body: [
+        {
+          ContentType: 'HTML',
+          Content: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style=\"color: #333;\">OTP Verification</h2>
+              <p>Your OTP is:</p>
+              <h1 style=\"color: #007bff; font-size: 32px; text-align: center; margin: 20px 0;\">${otp}</h1>
+              <p>This OTP will expire in 10 minutes.</p>
+            </div>
+          `,
+        },
+      ],
+    },
   };
-  await transporter.sendMail(mailOptions);
+
+  const res = await fetch('https://api.elasticemail.com/v4/emails', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-ElasticEmail-ApiKey': apiKey,
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) {
+    const text = await res.text().catch(() => '');
+    throw new Error(`ElasticEmail error: ${res.status} ${res.statusText} ${text}`);
+  }
 };
 
 export const register = async (req: Request, res: Response) => {
