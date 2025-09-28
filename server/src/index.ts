@@ -18,6 +18,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 
+app.set('trust proxy', 1);
+
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
@@ -53,7 +55,7 @@ app.use(express.urlencoded({ extended: true }));
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID!,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-  callbackURL: "/api/auth/google/callback"
+  callbackURL: `${process.env.SERVER_URL || 'http://localhost:5000'}/api/auth/google/callback`
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     let user = await User.findOne({ googleId: profile.id });

@@ -19,6 +19,7 @@
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.63.0",
     "react-router-dom": "^7.9.3",
+    "sib-api-v3-sdk": "^8.5.0",
     "yup": "^1.7.1"
   },
   "devDependencies": {
