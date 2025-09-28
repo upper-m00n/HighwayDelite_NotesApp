@@ -2,223 +2,147 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import nodemailer from 'nodemailer';
-import { IUser, User } from '../models/user.model'; 
-import { authenticateToken } from '../middlewares/auth';
+import { IUser, User } from '../models/user.model';
 
-const generateOTP = (): string => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-};
+const generateOTP = (): string => Math.floor(100000 + Math.random() * 900000).toString();
 
 const sendOTPEmail = async (email: string, otp: string): Promise<void> => {
-  try {
-    const transporter = nodemailer.createTransport({
+  const transporter = nodemailer.createTransport({
     service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
+    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
   });
-
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,
-    subject: 'OTP Verification for MyNotes',
+    subject: 'OTP Verification',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">OTP Verification</h2>
-        <p>Your OTP for MyNotes verification is:</p>
+        <p>Your OTP is:</p>
         <h1 style="color: #007bff; font-size: 32px; text-align: center; margin: 20px 0;">${otp}</h1>
         <p>This OTP will expire in 10 minutes.</p>
-        <p>If you didn't request this OTP, please ignore this email.</p>
       </div>
     `
   };
-
   await transporter.sendMail(mailOptions);
-  } catch (error) {
-    console.log("error while sending otp",error)
-  }
 };
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { email, password, name } = req.body;
-
-    // Validation
-    if (!email || !password || !name) {
-      return res.status(400).json({ error: 'All fields are required' });
-    }
-
-    if (password.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' });
-    }
-
+    const { email, name, dob } = req.body;
+    if (!email || !name) return res.status(400).json({ error: 'Email and name are required' });
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: 'Invalid email format' });
-    }
-
-    
+    if (!emailRegex.test(email)) return res.status(400).json({ error: 'Invalid email format' });
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ error: 'User already exists' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 12);
+    if (existingUser) return res.status(400).json({ error: 'User already exists' });
 
     const otp = generateOTP();
-    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-
-    const user = new User({
-      email,
-      password: hashedPassword,
-      name,
-      otp,
-      otpExpires
-    });
-
+    const user = new User({ email, name, otp, otpExpires: new Date(Date.now() + 10 * 60 * 1000), dob });
     await user.save();
-
-    try {
-      await sendOTPEmail(email, otp);
-    } catch (emailError) {
-      console.error('Email sending failed:', emailError);
-      return res.status(500).json({ error: 'Failed to send OTP email' });
-    }
-
-    res.status(201).json({
-      message: 'User registered successfully. Please check your email for OTP verification.',
-      userId: user._id
-    });
+    await sendOTPEmail(email, otp);
+    return res.status(201).json({ message: 'User registered. Check email for OTP.', userId: user._id });
   } catch (error) {
     console.error('Registration error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 export const verifyOTP = async (req: Request, res: Response) => {
   try {
     const { email, otp } = req.body;
-
-    if (!email || !otp) {
-      return res.status(400).json({ error: 'Email and OTP are required' });
-    }
-
+    if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required' });
     const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ error: 'User not found' });
-    }
-
-    if (user.isVerified) {
-      return res.status(400).json({ error: 'User already verified' });
-    }
-
-    if (user.otp !== otp) {
-      return res.status(400).json({ error: 'Invalid OTP' });
-    }
-
-    if (user.otpExpires && user.otpExpires < new Date()) {
-      return res.status(400).json({ error: 'OTP expired' });
-    }
-
- 
+    if (!user) return res.status(400).json({ error: 'User not found' });
+    if (user.isVerified) return res.status(400).json({ error: 'User already verified' });
+    if (user.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
+    if (user.otpExpires && user.otpExpires < new Date()) return res.status(400).json({ error: 'OTP expired' });
     user.isVerified = true;
     user.otp = undefined;
     user.otpExpires = undefined;
     await user.save();
-
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET!,
-      { expiresIn: '7d' }
-    );
-
-    res.json({
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
+    return res.json({
       message: 'Email verified successfully',
       token,
-      user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        isVerified: user.isVerified
-      }
+      user: { id: user._id, email: user.email, name: user.name, isVerified: user.isVerified }
     });
   } catch (error) {
     console.error('OTP verification error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
-    console.log("email and password:",email,password);
-    
-    if (!email || !password) {
-      console.log("Email pass required.")
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
-
+    if (!email || !password) return res.status(400).json({ error: 'Email and password are required' });
     const user = await User.findOne({ email });
-    if (!user) {
-      console.log("cannot find user.")
-      return res.status(400).json({ error: 'Invalid credentials' });
-      
-    }
-
-    if (!user.password) {
-      console.log("password")
-      return res.status(400).json({ error: 'Please use Google login' });
-      
-    }
-
-    if (!user.isVerified) {
-      console.log("Please verify email.")
-      return res.status(400).json({ error: 'Please verify your email first' });
-      
-    }
-
+    if (!user) return res.status(400).json({ error: 'Invalid credentials' });
+    if (!user.password) return res.status(400).json({ error: 'Please use Google login' });
+    if (!user.isVerified) return res.status(400).json({ error: 'Please verify your email first' });
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      console.log("Please enter valid password.")
-      return res.status(400).json({ error: 'Invalid credentials' });
-    }
-
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET!,
-      { expiresIn: '7d' }
-    );
-
-    res.json({
+    if (!isPasswordValid) return res.status(400).json({ error: 'Invalid credentials' });
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
+    return res.json({
       message: 'Login successful',
       token,
-      user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        isVerified: user.isVerified
-      }
+      user: { id: user._id, email: user.email, name: user.name, isVerified: user.isVerified }
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 export const getProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     const user = req.user as IUser;
-    res.json({
-      user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        isVerified: user.isVerified
-      }
-    });
+    res.json({ user: { id: user._id, email: user.email, name: user.name, isVerified: user.isVerified } });
   } catch (error) {
     console.error('Get profile error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const loginWithOTP = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ error: 'User not found' });
+    if (!user.isVerified) return res.status(400).json({ error: 'Please verify your email first' });
+    const otp = generateOTP();
+    user.otp = otp;
+    user.otpExpires = new Date(Date.now() + 10 * 60 * 1000);
+    await user.save();
+    await sendOTPEmail(email, otp);
+    return res.json({ message: 'OTP sent to email' });
+  } catch (error) {
+    console.error('Login OTP error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const verifyLoginOTP = async (req: Request, res: Response) => {
+  try {
+    const { email, otp } = req.body;
+    if (!email || !otp) return res.status(400).json({ error: 'Email and OTP are required' });
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ error: 'User not found' });
+    if (!user.isVerified) return res.status(400).json({ error: 'Please verify your email first' });
+    if (user.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
+    if (user.otpExpires && user.otpExpires < new Date()) return res.status(400).json({ error: 'OTP expired' });
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET!, { expiresIn: '7d' });
+    return res.json({
+      message: 'Login successful',
+      token,
+      user: { id: user._id, email: user.email, name: user.name, isVerified: user.isVerified }
+    });
+  } catch (error) {
+    console.error('Verify login OTP error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };

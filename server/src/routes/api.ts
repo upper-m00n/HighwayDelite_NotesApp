@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, verifyOTP, login, getProfile } from '../controllers/authController';
+import { register, verifyOTP, login, getProfile, loginWithOTP, verifyLoginOTP } from '../controllers/authController';
 import { createNote, getNotes, updateNote, deleteNote } from '../controllers/noteController';
 import { authenticateToken } from '../middlewares/auth';
 
@@ -10,6 +10,8 @@ router.post('/register', register);
 router.post('/verify-otp', verifyOTP);
 router.post('/login', login);
 router.get('/profile', authenticateToken, getProfile);
+router.post('/auth/login', loginWithOTP);
+router.post('/auth/verify-login', verifyLoginOTP);
 
 // Note routes
 router.post('/notes', authenticateToken, createNote);

@@ -10,6 +10,7 @@ export interface IUser extends Document {
   otpExpires?: Date;
   createdAt: Date;
   updatedAt: Date;
+  dob:Date
 }
 
 const UserSchema = new Schema<IUser>({
@@ -24,6 +25,10 @@ const UserSchema = new Schema<IUser>({
     type: String,
     minlength: 6
   },
+  dob:{
+    type:Date
+  }
+  ,
   googleId: {
     type: String,
     unique: true,
