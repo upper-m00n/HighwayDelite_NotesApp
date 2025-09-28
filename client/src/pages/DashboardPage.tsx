@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotes } from '../contexts/NoteContext';
-import { Plus, Search, LogOut, User, Edit3, Trash2, Save, X } from 'lucide-react';
+import { Plus, Search, LogOut, User, Edit3, Trash2, Save, X, Sun } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -68,7 +68,8 @@ const Dashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-gray-900">MyNotes</h1>
+              <Sun className="h-7 w-7 text-blue-600" />
+              <span className="ml-3 text-lg font-semibold text-gray-900">HD</span>
             </div>
             
             <div className="flex items-center space-x-4">

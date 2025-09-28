@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import abstract from '../assets/abstract.png'
+import { Sun } from 'lucide-react';
 
 const MailIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -93,39 +95,38 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden grid grid-cols-1 md:grid-cols-2">
-        
+    <div className="min-h-screen bg-[#F7F8FA] flex items-center justify-center p-4">
+      <div className="w-full max-w-5xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden grid grid-cols-1 md:grid-cols-2">
+    
         <div className="p-8 md:p-12">
+        
           <div className="flex items-center mb-10">
-            <svg className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            <span className="ml-3 text-2xl font-bold text-gray-800">HD</span>
+            <Sun className="h-8 w-8 text-blue-600" />
+            <span className="ml-3 text-xl font-semibold text-gray-900">HD</span>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Sign in</h1>
-          <p className="text-gray-500 mb-8">Welcome back! Please enter your details.</p>
+          <h1 className="text-[28px] md:text-3xl font-bold text-gray-900 mb-2">Sign in</h1>
+          <p className="text-gray-500 mb-6">Welcome back! Please enter your details.</p>
 
           {error && <p className="mb-4 text-sm text-red-600 bg-red-50 p-3 rounded-lg">{error}</p>}
 
-          <form onSubmit={isOtpSent ? handleVerifyLoginOtp : handleSendLoginOtp} className="space-y-6">
+          <form onSubmit={isOtpSent ? handleVerifyLoginOtp : handleSendLoginOtp} className="space-y-5">
             {!isOtpSent ? (
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Email</label>
-                  <div className="mt-2 relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                      <MailIcon />
-                    </div>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email"
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    />
+              <div>
+                <label className="text-sm font-medium text-gray-700">Email</label>
+                <div className="mt-2 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <MailIcon />
                   </div>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
                 </div>
+              </div>
             ) : (
               <div>
                 <label className="text-sm font-medium text-gray-700">OTP</label>
@@ -138,16 +139,24 @@ const LoginPage: React.FC = () => {
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
                     placeholder="Enter the 6-digit OTP"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
               </div>
             )}
-            
+
+            <div className="flex items-center justify-between">
+              <label className="inline-flex items-center gap-2 text-sm text-gray-600">
+                <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                Remember me
+              </label>
+              <button type="button" className="text-sm text-blue-600 hover:underline">Forgot password?</button>
+            </div>
+
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-300 disabled:opacity-50"
+              className="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50"
             >
               {isLoading ? 'Processing...' : (isOtpSent ? 'Sign in' : 'Send OTP')}
             </button>
@@ -155,10 +164,8 @@ const LoginPage: React.FC = () => {
 
           <div className="mt-6">
             <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+              <div className="relative flex justify-center text-xs uppercase tracking-wide">
                 <span className="px-2 bg-white text-gray-500">Or continue with</span>
               </div>
             </div>
@@ -184,11 +191,11 @@ const LoginPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="hidden md:block">
+        <div className="hidden md:flex p-3 md:p-4 bg-white">
           <img
-            src="https://images.unsplash.com/photo-1617957718642-72c578a48afd?q=80&w=2070&auto=format&fit=crop"
-            alt="Abstract background"
-            className="w-full h-full object-cover"
+            src={abstract}
+            alt="Blue abstract bloom"
+            className="w-full h-full object-cover rounded-2xl"
           />
         </div>
       </div>
