@@ -18,7 +18,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // If there's a token but user hasn't been populated yet, wait instead of redirecting
   const hasToken = typeof window !== 'undefined' && !!localStorage.getItem('token');
   if (!user && hasToken) {
     return (

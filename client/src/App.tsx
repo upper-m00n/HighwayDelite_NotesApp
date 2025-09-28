@@ -6,7 +6,6 @@ import Dashboard from './pages/DashboardPage';
 import AuthCallback from './pages/AuthCallback';
 import Login from './pages/LoginPage';
 import Register from './pages/RegisterPage';
-import VerifyOTP from './pages/VerifyOtpPage';
 import { NoteProvider } from './contexts/NoteContext';
 
 function App() {
@@ -18,7 +17,6 @@ function App() {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route path="/verify-otp" element={<VerifyOTP />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route 
                 path="/dashboard" 

@@ -20,6 +20,7 @@ interface AuthContextType {
   logout: () => void;
   loading: boolean;
   setToken: (token: string | null) => void;
+  setUser: (user: User | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -64,8 +65,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initAuth();
   }, []);
 
-  // Fetch profile whenever token changes (e.g., after OTP login)
-  useEffect(() => {
+ useEffect(() => {
     const fetchProfile = async () => {
       if (!token) return;
       setLoading(true);
@@ -76,7 +76,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
         setUser(response.data.user);
       } catch (e) {
-        // If token invalid, clear
+  
         localStorage.removeItem('token');
         setToken(null);
         setUser(null);
@@ -140,7 +140,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     googleLogin,
     logout,
     loading,
-    setToken
+    setToken,
+    setUser
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

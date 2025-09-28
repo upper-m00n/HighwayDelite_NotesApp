@@ -23,7 +23,7 @@ const LoginPage: React.FC = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  const { googleLogin, setToken } = useAuth();
+  const { googleLogin, setToken, setUser } = useAuth();
   const navigate = useNavigate();
   const API_BASE_URL = (import.meta.env.VITE_API_URL as string) || 'http://localhost:5000/api';
 
@@ -80,7 +80,10 @@ const LoginPage: React.FC = () => {
         }
         localStorage.setItem('token', data.token);
         setToken(data.token);
-        navigate('/');
+        if (data.user) {
+          setUser(data.user);
+        }
+        setTimeout(() => navigate('/dashboard', { replace: true }), 50);
 
     } catch (err: any) {
         setError(err.message);
