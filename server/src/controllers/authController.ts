@@ -1,50 +1,42 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { fetch } from 'undici';
+import Mailjet from 'node-mailjet';
 import { IUser, User } from '../models/user.model';
 
 const generateOTP = (): string => Math.floor(100000 + Math.random() * 900000).toString();
 
 const sendOTPEmail = async (email: string, otp: string): Promise<void> => {
-  const apiKey = process.env.ELASTIC_API_KEY;
+  const apiKey = process.env.MAILJET_API_KEY;
+  const apiSecret = process.env.MAILJET_API_SECRET;
   const from = process.env.EMAIL_FROM;
-  if (!apiKey) throw new Error('ELASTIC_API_KEY is not set');
+  if (!apiKey) throw new Error('MAILJET_API_KEY is not set');
+  if (!apiSecret) throw new Error('MAILJET_API_SECRET is not set');
   if (!from) throw new Error('EMAIL_FROM is not set');
 
-  const body = {
-    Recipients: [{ Email: email }],
-    Content: {
-      From: from,
-      Subject: 'OTP Verification',
-      Body: [
+  const mj = new Mailjet({ apiKey, apiSecret });
+  const res = await mj
+    .post('send', { version: 'v3.1' })
+    .request({
+      Messages: [
         {
-          ContentType: 'HTML',
-          Content: `
+          From: { Email: from, Name: 'HighwayDelite' },
+          To: [{ Email: email }],
+          Subject: 'OTP Verification',
+          HTMLPart: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style=\"color: #333;\">OTP Verification</h2>
+              <h2 style="color: #333;">OTP Verification</h2>
               <p>Your OTP is:</p>
-              <h1 style=\"color: #007bff; font-size: 32px; text-align: center; margin: 20px 0;\">${otp}</h1>
+              <h1 style="color: #007bff; font-size: 32px; text-align: center; margin: 20px 0;">${otp}</h1>
               <p>This OTP will expire in 10 minutes.</p>
             </div>
           `,
         },
       ],
-    },
-  };
+    });
 
-  const res = await fetch('https://api.elasticemail.com/v4/emails', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-ElasticEmail-ApiKey': apiKey,
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    throw new Error(`ElasticEmail error: ${res.status} ${res.statusText} ${text}`);
+  if (res.response.status !== 200) {
+    throw new Error(`Mailjet error: ${res.response.status} ${res.response.statusText}`);
   }
 };
 
