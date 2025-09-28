@@ -30,7 +30,8 @@ app.use(limiter);
 app.use(cors({
   origin: [
     'http://localhost:5173',
-    'http://localhost:5174'
+    'http://localhost:5174',
+    'https://highway-delite-notes-app-g717.vercel.app'
   ],
   credentials: true
 }));
