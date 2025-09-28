@@ -7,10 +7,12 @@ import AuthCallback from './pages/AuthCallback';
 import Login from './pages/LoginPage';
 import Register from './pages/RegisterPage';
 import VerifyOTP from './pages/VerifyOtpPage';
+import { NoteProvider } from './contexts/NoteContext';
 
 function App() {
   return (
     <AuthProvider>
+      <NoteProvider>
         <Router>
           <div className="App">
             <Routes>
@@ -30,6 +32,7 @@ function App() {
             </Routes>
           </div>
         </Router>
+        </NoteProvider>
     </AuthProvider>
   );
 }

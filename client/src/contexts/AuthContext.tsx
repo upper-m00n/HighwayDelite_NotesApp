@@ -7,13 +7,14 @@ interface User {
   email: string;
   name: string;
   isVerified: boolean;
+  dob: string;
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  register: (email: string, dob: string, name: string) => Promise<void>;
   verifyOTP: (email: string, otp: string) => Promise<void>;
   googleLogin: () => void;
   logout: () => void;
@@ -63,6 +64,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initAuth();
   }, []);
 
+  // Fetch profile whenever token changes (e.g., after OTP login)
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!token) return;
+      setLoading(true);
+      try {
+        const response = await axios.get(`${API_BASE_URL}/profile`, {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { t: Date.now() }
+        });
+        setUser(response.data.user);
+      } catch (e) {
+        // If token invalid, clear
+        localStorage.removeItem('token');
+        setToken(null);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, [token]);
+
   const login = async (email: string, password: string) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/login`, { email, password });
@@ -76,9 +100,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (email: string, password: string, name: string) => {
+  const register = async (email: string, dob: string, name: string) => {
     try {
-      await axios.post(`${API_BASE_URL}/register`, { email, password, name });
+      await axios.post(`${API_BASE_URL}/register`, { email, dob, name });
     } catch (error: any) {
       throw new Error(error.response?.data?.error || 'Registration failed');
     }
